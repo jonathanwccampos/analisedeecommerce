@@ -1,5 +1,5 @@
 {
   "functions": {
-    "app/api/analisar/route.ts": { "maxDuration": 60 }
+    "app/api/analisar/route.ts": { "maxDuration": 300 }
   }
 }

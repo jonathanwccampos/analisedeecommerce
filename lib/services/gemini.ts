@@ -182,6 +182,8 @@ const REVENUE_MIDPOINTS: Record<string, number> = {
 
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite']
 
+const GEMINI_CALL_TIMEOUT_MS = 25000
+
 async function generateWithFallback(
   genAI: GoogleGenerativeAI,
   prompt: string | (string | { inlineData: { data: string; mimeType: string } })[],
@@ -190,14 +192,18 @@ async function generateWithFallback(
   for (const modelName of GEMINI_MODELS) {
     const model = genAI.getGenerativeModel({ model: modelName })
     try {
-      const result = await model.generateContent(prompt as Parameters<typeof model.generateContent>[0])
+      const result = await Promise.race([
+        model.generateContent(prompt as Parameters<typeof model.generateContent>[0]),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Gemini call timeout')), GEMINI_CALL_TIMEOUT_MS)
+        ),
+      ])
       const text = result.response.text().trim()
       if (text) return text
     } catch (e: unknown) {
       lastError = e
       const status = (e as { status?: number })?.status
       if (status === 503 || status === 429) continue
-      // If it's a general error, we still try the fallback models
     }
   }
   throw lastError || new Error('All Gemini models unavailable')

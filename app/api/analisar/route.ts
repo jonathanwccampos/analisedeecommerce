@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { supabase } from '@/lib/supabase'
 import { runAnalysis } from '@/lib/services/analyzer'
 
@@ -74,9 +75,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Erro ao iniciar análise' }, { status: 500 })
     }
 
-    // Fire and forget — don't await, but catch rejections to avoid UnhandledPromiseRejection
-    runAnalysis(analysis.id, url, context).catch(err =>
-      console.error(`[runAnalysis] unhandled error for ${analysis.id}:`, err)
+    // waitUntil keeps the Vercel function alive after the response is sent
+    waitUntil(
+      runAnalysis(analysis.id, url, context).catch(err =>
+        console.error(`[runAnalysis] unhandled error for ${analysis.id}:`, err)
+      )
     )
 
     return NextResponse.json({ id: analysis.id })
