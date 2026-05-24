@@ -116,7 +116,7 @@ export async function runAnalysis(analysisId: string, url: string, context: Part
     )
 
     // Gemini analysis (runs after all 6 services)
-    const { visualIssues, executiveSummary, adAnalysis, correctedCategories } = await analyzeWithGemini(
+    const { visualIssues, executiveSummary, adAnalysis, correctedCategories, ticketStrategy } = await analyzeWithGemini(
       pageSpeedResult.screenshot,
       categories,
       url,
@@ -158,6 +158,7 @@ export async function runAnalysis(analysisId: string, url: string, context: Part
       executiveSummary,
       categories: finalCategories,
       topPriorities,
+      ticketStrategy,
     }
 
     // Save results to Supabase
@@ -212,6 +213,12 @@ export async function runAnalysis(analysisId: string, url: string, context: Part
           ...(adAnalysis ? [{
             title: '_ad_analysis',
             description: JSON.stringify(adAnalysis),
+            severity: 'ok' as const,
+            cause: '',
+          }] : []),
+          ...(ticketStrategy ? [{
+            title: '_ticket_strategy',
+            description: JSON.stringify(ticketStrategy),
             severity: 'ok' as const,
             cause: '',
           }] : []),

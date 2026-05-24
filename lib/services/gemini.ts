@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import type { CategoryResult, Issue, AdAnalysis, AdRecommendation, CreativeIdea, StoreContext } from '@/lib/types'
+import type { CategoryResult, Issue, AdAnalysis, AdRecommendation, CreativeIdea, StoreContext, TicketStrategy } from '@/lib/types'
 
 // ─── Labels ──────────────────────────────────────────────────────────────────
 
@@ -219,6 +219,64 @@ function buildContextText(context: Partial<StoreContext>): string {
   return parts.join(' | ')
 }
 
+// ─── Chamada 4: estratégia de ticket médio ────────────────────────────────────
+
+async function generateTicketStrategy(
+  genAI: GoogleGenerativeAI,
+  context: Partial<StoreContext>,
+): Promise<TicketStrategy | undefined> {
+  if (!context.averageTicket || !context.niche) return undefined
+
+  const niche = NICHE_LABELS[context.niche] ?? context.niche
+  const ticketLabel = TICKET_LABELS[context.averageTicket] ?? context.averageTicket
+  const revenueLabel = context.monthlyRevenue ? REVENUE_LABELS[context.monthlyRevenue] : null
+  const platform = context.platform ?? null
+
+  const prompt = `Você é um consultor de crescimento especializado em e-commerce brasileiro, focado em aumentar o valor médio por pedido.
+
+Perfil da loja:
+- Nicho: ${niche}
+- Ticket médio atual: ${ticketLabel}
+${platform ? `- Plataforma: ${platform}` : ''}
+${revenueLabel ? `- Faturamento: ${revenueLabel}` : ''}
+
+Crie 4 estratégias práticas e específicas para aumentar o ticket médio dessa loja.
+
+REGRAS ABSOLUTAS:
+- Escreva em português claro, para o dono da loja — não para um consultor
+- ZERO termos técnicos em inglês sem explicação (sem "upsell", "cross-sell", "bundle", "capsule wardrobe", etc.)
+- Se precisar usar um conceito, explique com palavras simples: "venda conjunta de produtos" ao invés de "cross-sell"
+- Cada estratégia deve ser concreta e específica para o nicho de ${niche}
+- Use números reais: percentuais, faixas de preço, quantidade de itens
+- A meta deve ser realista: aumentar o ticket em 30–60%
+
+Responda APENAS em JSON válido:
+{
+  "goal": "Meta: de R$X → R$Y por pedido (calcule baseado no ticket atual)",
+  "tips": [
+    { "title": "título curto (máximo 6 palavras)", "description": "2-3 frases práticas e específicas para ${niche} com números concretos" },
+    { "title": "...", "description": "..." },
+    { "title": "...", "description": "..." },
+    { "title": "...", "description": "..." }
+  ]
+}`
+
+  try {
+    const text = await generateWithFallback(genAI, prompt)
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) return undefined
+    const parsed = JSON.parse(jsonMatch[0]) as { goal?: string; tips?: { title: string; description: string }[] }
+    if (!parsed.goal || !Array.isArray(parsed.tips)) return undefined
+    return {
+      goal: parsed.goal,
+      tips: parsed.tips.slice(0, 4).map(t => ({ title: t.title, description: t.description })),
+    }
+  } catch (e) {
+    console.warn('Gemini ticket strategy failed:', e)
+    return undefined
+  }
+}
+
 // ─── Resultado final ─────────────────────────────────────────────────────────
 
 type GeminiResult = {
@@ -226,6 +284,7 @@ type GeminiResult = {
   executiveSummary: string
   adAnalysis?: AdAnalysis
   correctedCategories: CategoryResult[]
+  ticketStrategy?: TicketStrategy
 }
 
 // ─── Validação Técnica de Falsos Positivos via IA ────────────────────────────
@@ -650,10 +709,8 @@ export async function analyzeWithGemini(
 
   const genAI = new GoogleGenerativeAI(apiKey)
 
-  // Todos os 4 calls Gemini em paralelo para minimizar latência.
-  // A correção usa o screenshot para remover falsos positivos do crawler estático.
-  // Sumário e análise de anúncios usam as categorias brutas (diferença mínima de qualidade).
-  const [correctedCategories, visualIssues, executiveSummary, adAnalysis] = await Promise.all([
+  // Todos os 5 calls Gemini em paralelo para minimizar latência.
+  const [correctedCategories, visualIssues, executiveSummary, adAnalysis, ticketStrategy] = await Promise.all([
     screenshot
       ? correctTechnicalAnalysisWithGemini(genAI, screenshot, categories, context)
       : Promise.resolve(categories),
@@ -662,7 +719,8 @@ export async function analyzeWithGemini(
       : Promise.resolve([]),
     generateExecutiveSummary(genAI, categories, url, context),
     generateAdAnalysis(genAI, categories, context, overallScore),
+    generateTicketStrategy(genAI, context),
   ])
 
-  return { visualIssues, executiveSummary, adAnalysis, correctedCategories }
+  return { visualIssues, executiveSummary, adAnalysis, correctedCategories, ticketStrategy }
 }

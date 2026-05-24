@@ -64,6 +64,16 @@ export type AdAnalysis = {
   audienceStrategy: string[]
 }
 
+export type TicketTip = {
+  title: string
+  description: string
+}
+
+export type TicketStrategy = {
+  goal: string
+  tips: TicketTip[]
+}
+
 export type AnalysisResult = {
   overallScore: number
   classification: Classification
@@ -73,6 +83,7 @@ export type AnalysisResult = {
   categories: CategoryResult[]
   topPriorities: Issue[]
   adAnalysis?: AdAnalysis
+  ticketStrategy?: TicketStrategy
 }
 
 export type AnalysisProgress = {

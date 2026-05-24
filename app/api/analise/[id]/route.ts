@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import type { AnalysisResult, AdAnalysis, CategoryName, CategoryResult, Issue } from '@/lib/types'
+import type { AnalysisResult, AdAnalysis, TicketStrategy, CategoryName, CategoryResult, Issue } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +21,12 @@ function parseMetaResults(metaIssues: Issue[]): Partial<AnalysisResult> {
     try { adAnalysis = JSON.parse(rawAdAnalysis) as AdAnalysis } catch { /* skip */ }
   }
 
+  let ticketStrategy: TicketStrategy | undefined
+  const rawTicket = get('_ticket_strategy')
+  if (rawTicket) {
+    try { ticketStrategy = JSON.parse(rawTicket) as TicketStrategy } catch { /* skip */ }
+  }
+
   return {
     benchmark: Number(get('_benchmark')) || 50,
     revenueImpact: {
@@ -31,6 +37,7 @@ function parseMetaResults(metaIssues: Issue[]): Partial<AnalysisResult> {
     classification: (get('_classification') as AnalysisResult['classification']) || 'warning',
     topPriorities,
     adAnalysis,
+    ticketStrategy,
   }
 }
 
@@ -101,6 +108,7 @@ export async function GET(
     categories,
     topPriorities: metaParsed.topPriorities ?? [],
     adAnalysis: metaParsed.adAnalysis,
+    ticketStrategy: metaParsed.ticketStrategy,
   }
 
   return NextResponse.json({ status: 'completed', result })

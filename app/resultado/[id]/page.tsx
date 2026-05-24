@@ -9,7 +9,7 @@ import { IssueItem } from '@/components/IssueItem'
 import { EmailGate } from '@/components/EmailGate'
 import { WhatsAppCTA } from '@/components/WhatsAppCTA'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import type { AnalysisResult, AnalysisResponse, CategoryName, AdAnalysis, StoreContext } from '@/lib/types'
+import type { AnalysisResult, AnalysisResponse, CategoryName, AdAnalysis, StoreContext, TicketStrategy } from '@/lib/types'
 import { CATEGORY_LABELS } from '@/lib/types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -37,57 +37,6 @@ const ROAS_CONFIG = {
 
 const FORMAT_ICONS: Record<string, string> = { video: '🎬', carrossel: '🖼️', imagem: '📸' }
 
-const TICKET_STRATEGIES: Record<string, { goal: string; tips: { title: string; description: string }[] }> = {
-  'menos-100': {
-    goal: 'Passar de R$ 70 → R$ 130+ por pedido',
-    tips: [
-      { title: 'Kit com desconto progressivo', description: 'Ofereça "3 por R$ 199" ou "leve 2, pague 1,5". O comprador de impulso tende a aproveitar quando o preço unitário cai.' },
-      { title: 'Frete grátis a partir de um valor', description: 'Defina o limite de frete grátis 30-40% acima do ticket atual. Ex: se vende R$ 70 em média, coloque frete grátis a partir de R$ 99.' },
-      { title: 'Cross-sell no carrinho com 1 clique', description: 'Mostre "quem comprou X também levou Y" no carrinho. Produtos complementares com ticket < R$ 30 convertem bem.' },
-      { title: 'Versão maior ou premium do produto', description: 'Adicione uma opção "tamanho família", "kit completo" ou "versão premium" ao lado do produto padrão.' },
-    ],
-  },
-  '100-250': {
-    goal: 'Passar de R$ 175 → R$ 280+ por pedido',
-    tips: [
-      { title: 'Frete grátis como alavanca de ticket', description: 'Com ticket atual de R$ 175, coloque frete grátis a partir de R$ 249. A maioria adiciona mais 1 produto para não pagar o frete.' },
-      { title: 'Embalagem premium ou personalizada', description: 'Ofereça "embalagem para presente" por R$ 15–R$ 25 no checkout. Além de receita extra, fideliza para datas especiais.' },
-      { title: 'Garantia estendida ou proteção do produto', description: 'Especialmente eficaz em produtos de moda, eletrônicos ou casa. "Proteção total por 1 ano por R$ 29" tem alta adesão.' },
-      { title: 'Produto complementar no checkout', description: 'Sugira 1–2 itens complementares na página de carrinho, com desconto exclusivo de "última chance" de 10%.' },
-    ],
-  },
-  '250-500': {
-    goal: 'Passar de R$ 375 → R$ 500+ por pedido',
-    tips: [
-      { title: 'Programa de fidelidade ou cashback', description: 'Ofereça pontos ou crédito na próxima compra para quem passa de R$ 500. Além de aumentar o ticket, fideliza e reduz custo de aquisição.' },
-      { title: 'Parcelamento sem juros em mais vezes', description: 'Se você parcela em 6x, ofereça 10x sem juros para pedidos acima de R$ 450. O brasileiro pensa em parcela, não em preço total.' },
-      { title: 'Consultoria ou serviço incluído', description: 'Adicione "montagem incluída", "instalação gratuita" ou "consultoria por WhatsApp" para compras acima de certo valor.' },
-      { title: 'Bundle exclusivo com economia real', description: 'Crie um combo que economize 15–20% em relação à compra separada. Mostre o valor cheio riscado ao lado do preço do combo.' },
-    ],
-  },
-  'mais-500': {
-    goal: 'Aumentar o valor percebido e recorrência',
-    tips: [
-      { title: 'Personalização e exclusividade', description: 'Ofereça versão personalizada (nome, cor, tamanho sob medida) com prazo claro. Produtos únicos têm ticket 40–60% acima da versão padrão.' },
-      { title: 'Atendimento VIP no WhatsApp antes da compra', description: 'Tickets altos exigem confiança. Um botão "fale com especialista" antes do checkout reduz abandono.' },
-      { title: 'Seguro ou garantia estendida premium', description: 'Produto acima de R$ 500 com "proteção total de 2 anos por R$ 69" tem alta adesão.' },
-      { title: 'Plano de manutenção ou reposição periódica', description: 'Se o produto precisa de reposição (cosméticos, suplementos), ofereça assinatura com 15% de desconto.' },
-    ],
-  },
-}
-
-const NICHE_TICKET_TIPS: Record<string, string[]> = {
-  moda: ['Lookbook "monte seu look completo" com link direto para todos os itens', 'Capsule wardrobe — venda coleção coordenada com desconto de conjunto'],
-  fitness: ['Stack de suplementos com protocolo (pré + pós + recovery) com desconto de combo', 'Plano de 30/60/90 dias com kit de produtos + e-book de treino'],
-  beleza: ['Routine completa (limpeza + hidratação + tratamento) vendida como kit', 'Tamanho "economy size" ou refil com custo por ml menor e ticket maior'],
-  eletronicos: ['Protetor de tela + capa + fone como bundle no checkout', 'Plano de proteção contra danos acidentais por 12 meses'],
-  alimentos: ['Cesta semanal ou box mensal com frete grátis e desconto de 10%', 'Mix degustação como "porta de entrada" para pedidos maiores futuros'],
-  casa: ['Decoração por ambiente: "sala completa" com produtos coordenados', 'Serviço de montagem ou instalação incluído em pedidos acima de X'],
-  infantil: ['Kit faixa etária (de 0 a 2 anos, de 3 a 6 anos) com desconto progressivo', 'Assinatura trimestral de surpresa para bebê/criança'],
-  esportes: ['Kit treino completo (roupa + acessório + suplemento) por esporte específico', 'Combo equipamento + manutenção ou reposição de peças'],
-  pets: ['Pack mensal de ração + petisco + higiene com desconto e frete fixo', 'Kit boas-vindas para novo pet com tudo que precisa no primeiro mês'],
-  outro: ['Bundle de produtos complementares com desconto de conjunto', 'Programa de fidelidade: na 3ª compra, ganhe X de desconto'],
-}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -207,11 +156,8 @@ const PrioritiesTeaser = memo(function PrioritiesTeaser({ priorities }: { priori
   )
 })
 
-const TicketMedioSection = memo(function TicketMedioSection({ context }: { context: Partial<StoreContext> }) {
-  if (!context.averageTicket) return null
-  const strategy = TICKET_STRATEGIES[context.averageTicket]
+const TicketMedioSection = memo(function TicketMedioSection({ strategy }: { strategy?: TicketStrategy }) {
   if (!strategy) return null
-  const nicheTips = NICHE_TICKET_TIPS[context.niche ?? 'outro'] ?? NICHE_TICKET_TIPS.outro
 
   return (
     <div style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
@@ -222,44 +168,25 @@ const TicketMedioSection = memo(function TicketMedioSection({ context }: { conte
             Como Aumentar seu Ticket Médio
           </h2>
         </div>
-        <p style={{ color: 'rgba(168,85,247,0.7)', fontSize: '13px' }}>Meta: {strategy.goal}</p>
+        <p style={{ color: 'rgba(168,85,247,0.7)', fontSize: '13px' }}>{strategy.goal}</p>
       </div>
-
-      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {strategy.tips.map((tip, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: '12px', padding: '14px', borderRadius: '10px', background: 'rgba(138,43,226,0.06)', border: '1px solid rgba(138,43,226,0.15)' }}>
-              <div style={{
-                width: '26px', height: '26px', background: 'rgba(138,43,226,0.8)', borderRadius: '8px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: 900, color: '#f1f5f9', flexShrink: 0,
-                fontFamily: 'var(--font-syne), sans-serif',
-              }}>
-                {idx + 1}
-              </div>
-              <div>
-                <p style={{ fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '4px' }}>{tip.title}</p>
-                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', lineHeight: 1.55 }}>{tip.description}</p>
-              </div>
+      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {strategy.tips.map((tip, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: '12px', padding: '14px', borderRadius: '10px', background: 'rgba(138,43,226,0.06)', border: '1px solid rgba(138,43,226,0.15)' }}>
+            <div style={{
+              width: '26px', height: '26px', background: 'rgba(138,43,226,0.8)', borderRadius: '8px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '12px', fontWeight: 900, color: '#f1f5f9', flexShrink: 0,
+              fontFamily: 'var(--font-syne), sans-serif',
+            }}>
+              {idx + 1}
             </div>
-          ))}
-        </div>
-
-        {nicheTips.length > 0 && (
-          <div>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px' }}>
-              Específico para seu nicho
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {nicheTips.map((tip, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: '10px', padding: '11px 14px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <span style={{ color: 'rgba(138,43,226,0.7)', flexShrink: 0, marginTop: '1px' }}>→</span>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '12px', lineHeight: 1.5 }}>{tip}</p>
-                </div>
-              ))}
+            <div>
+              <p style={{ fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '4px' }}>{tip.title}</p>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', lineHeight: 1.55 }}>{tip.description}</p>
             </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   )
@@ -397,7 +324,7 @@ const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalys
             <h3 style={{ fontWeight: 700, color: 'rgba(255,255,255,0.8)', marginBottom: '12px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>💡</span> Ideias de Criativo para Anúncios
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
               {ad.creativeIdeas.map((idea, idx) => (
                 <div key={idx} style={{ padding: '14px', borderRadius: '10px', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -445,6 +372,14 @@ export default function ResultPage() {
   const [emailUnlocked, setEmailUnlocked] = useState(false)
   const [storeUrl, setStoreUrl] = useState('')
   const [storeContext, setStoreContext] = useState<Partial<StoreContext>>({})
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const totalIssues = useMemo(
     () => result?.categories.reduce((sum, c) => sum + c.issues.length, 0) ?? 0,
@@ -553,7 +488,7 @@ export default function ResultPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '28px 16px 64px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ maxWidth: '760px', margin: '0 auto', padding: isMobile ? '16px 12px 64px' : '28px 16px 64px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
         {/* Score Hero */}
         <div style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '28px' }}>
@@ -573,7 +508,7 @@ export default function ResultPage() {
           <ScoreGauge score={result.overallScore} size="lg" />
           <MaturityTrack score={result.overallScore} />
 
-          <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', textAlign: 'center' }}>
+          <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px', textAlign: 'center' }}>
             {[
               { value: totalIssues, label: 'problemas', color: 'rgba(255,255,255,0.75)' },
               { value: criticalTotal, label: 'críticos', color: '#ff3366' },
@@ -596,7 +531,7 @@ export default function ResultPage() {
             <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#f1f5f9' }}>Diagnóstico por Pilar</h2>
             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>A = excelente · F = crítico</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '10px' }}>
             {result.categories.filter(cat => !cat.measurementFailed).map(cat => (
               <CategoryCard key={cat.category} category={cat} />
             ))}
@@ -690,7 +625,7 @@ export default function ResultPage() {
             </div>
 
             {/* Ticket médio */}
-            <TicketMedioSection context={storeContext} />
+            <TicketMedioSection strategy={result.ticketStrategy} />
 
             {/* Ad Analysis */}
             {result.adAnalysis ? (
