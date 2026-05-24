@@ -69,7 +69,7 @@ function selectTopPriorities(categories: CategoryResult[]): Issue[] {
 }
 
 export async function runAnalysis(analysisId: string, url: string, context: Partial<StoreContext> = {}): Promise<void> {
-  const TIMEOUT_MS = 40000
+  const TIMEOUT_MS = 20000
 
   try {
     // Fetch HTML once, share with all services

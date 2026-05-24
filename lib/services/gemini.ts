@@ -182,7 +182,7 @@ const REVENUE_MIDPOINTS: Record<string, number> = {
 
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite']
 
-const GEMINI_CALL_TIMEOUT_MS = 25000
+const GEMINI_CALL_TIMEOUT_MS = 15000
 
 async function generateWithFallback(
   genAI: GoogleGenerativeAI,
@@ -650,22 +650,18 @@ export async function analyzeWithGemini(
 
   const genAI = new GoogleGenerativeAI(apiKey)
 
-  // 1. Camada de Validação e Correção Técnica Visual do Gemini
-  let correctedCategories = categories
-  if (screenshot) {
-    correctedCategories = await correctTechnicalAnalysisWithGemini(genAI, screenshot, categories, context)
-  }
-
-  // 2. Análise visual da homepage baseada na captura de tela
-  const visualIssuesPromise = screenshot
-    ? generateVisualAnalysis(genAI, screenshot, context)
-    : Promise.resolve([])
-
-  // 3. Execução paralela do sumário executivo e da análise de anúncios sobre as categorias corrigidas
-  const [visualIssues, executiveSummary, adAnalysis] = await Promise.all([
-    visualIssuesPromise,
-    generateExecutiveSummary(genAI, correctedCategories, url, context),
-    generateAdAnalysis(genAI, correctedCategories, context, overallScore),
+  // Todos os 4 calls Gemini em paralelo para minimizar latência.
+  // A correção usa o screenshot para remover falsos positivos do crawler estático.
+  // Sumário e análise de anúncios usam as categorias brutas (diferença mínima de qualidade).
+  const [correctedCategories, visualIssues, executiveSummary, adAnalysis] = await Promise.all([
+    screenshot
+      ? correctTechnicalAnalysisWithGemini(genAI, screenshot, categories, context)
+      : Promise.resolve(categories),
+    screenshot
+      ? generateVisualAnalysis(genAI, screenshot, context)
+      : Promise.resolve([]),
+    generateExecutiveSummary(genAI, categories, url, context),
+    generateAdAnalysis(genAI, categories, context, overallScore),
   ])
 
   return { visualIssues, executiveSummary, adAnalysis, correctedCategories }

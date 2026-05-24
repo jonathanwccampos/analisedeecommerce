@@ -19,7 +19,7 @@ export async function analyzePageSpeed(url: string): Promise<{ result: CategoryR
 
   let data: Record<string, unknown>
   try {
-    const res = await fetch(`${PAGESPEED_API}?${params}`, { signal: AbortSignal.timeout(30000) })
+    const res = await fetch(`${PAGESPEED_API}?${params}`, { signal: AbortSignal.timeout(12000) })
     if (!res.ok) throw new Error(`PageSpeed HTTP ${res.status}`)
     data = await res.json() as Record<string, unknown>
   } catch (err) {

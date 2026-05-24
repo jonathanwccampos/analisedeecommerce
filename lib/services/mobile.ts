@@ -17,7 +17,7 @@ export async function analyzeMobile(url: string, html: string): Promise<Category
     const params = new URLSearchParams({ url, strategy: 'mobile', category: 'performance' })
     const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY
     if (apiKey) params.set('key', apiKey)
-    const res = await fetch(`${PAGESPEED_API}?${params}`, { signal: AbortSignal.timeout(30000) })
+    const res = await fetch(`${PAGESPEED_API}?${params}`, { signal: AbortSignal.timeout(12000) })
     if (res.ok) {
       const data = await res.json() as Record<string, unknown>
       const lr = data.lighthouseResult as Record<string, Record<string, unknown>> | undefined
