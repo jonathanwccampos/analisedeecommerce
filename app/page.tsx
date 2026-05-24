@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { StoreNiche, StorePlatform, AdSpend, MonthlyRevenue, AverageTicket, StoreContext } from '@/lib/types'
 
@@ -65,6 +65,14 @@ export default function LandingPage() {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const stepIndex = STEPS.indexOf(step)
 
@@ -126,7 +134,8 @@ export default function LandingPage() {
   return (
     <main style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', padding: '48px 16px',
+      alignItems: 'center', justifyContent: 'center',
+      padding: isMobile ? '24px 14px 32px' : '48px 16px',
       background: 'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(0,230,118,0.08) 0%, transparent 65%), #080c14',
       position: 'relative',
     }}>
@@ -140,7 +149,7 @@ export default function LandingPage() {
       <div style={{ maxWidth: '580px', width: '100%', position: 'relative', zIndex: 1 }}>
 
         {/* Hero */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? '20px' : '32px' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '7px',
             background: 'rgba(0,230,118,0.08)', border: '1px solid rgba(0,230,118,0.2)',
@@ -181,7 +190,8 @@ export default function LandingPage() {
         <div style={{
           background: '#0f1624',
           border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '20px', padding: '32px',
+          borderRadius: '20px',
+          padding: isMobile ? '22px 16px' : '32px',
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
         }}>
 
@@ -193,7 +203,7 @@ export default function LandingPage() {
               <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: '13px', marginBottom: '20px' }}>
                 Cada nicho tem benchmarks diferentes de conversão, abandono e ROAS — o diagnóstico vai comparar sua loja com os líderes do seu segmento
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '8px' }}>
                 {NICHES.map(n => (
                   <button key={n.value} ref={addHover} onClick={() => selectNiche(n.value)}
                     style={{ ...optionStyle.base, display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -213,7 +223,7 @@ export default function LandingPage() {
               <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: '13px', marginBottom: '20px' }}>
                 Shopify, Nuvemshop, VTEX — cada uma tem falhas típicas que o diagnóstico vai checar especificamente
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '8px' }}>
                 {PLATFORMS.map(p => (
                   <button key={p.value} ref={addHover} onClick={() => selectPlatform(p.value)} style={optionStyle.base}>
                     {p.label}

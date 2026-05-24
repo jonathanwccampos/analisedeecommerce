@@ -92,18 +92,18 @@ const RevenueImpactBanner = memo(function RevenueImpactBanner({ min, max }: { mi
       border: '1px solid rgba(255,51,102,0.25)',
       borderRadius: '16px', padding: '24px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-        <div style={{ fontSize: '28px', flexShrink: 0 }}>⚠️</div>
-        <div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+        <div style={{ fontSize: '24px', flexShrink: 0 }}>⚠️</div>
+        <div style={{ minWidth: 0 }}>
           <p style={{ color: 'rgba(255,51,102,0.7)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>
             Alerta Financeiro
           </p>
-          <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '17px', marginBottom: '4px', fontFamily: 'var(--font-syne), sans-serif' }}>
+          <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '15px', marginBottom: '4px', fontFamily: 'var(--font-syne), sans-serif' }}>
             Sua loja está perdendo estimados
           </p>
-          <p style={{ color: '#ff3366', fontWeight: 900, fontSize: 'clamp(24px, 5vw, 34px)', lineHeight: 1.1, fontFamily: 'var(--font-mono), monospace' }}>
+          <p style={{ color: '#ff3366', fontWeight: 900, fontSize: 'clamp(20px, 5vw, 34px)', lineHeight: 1.1, fontFamily: 'var(--font-mono), monospace', wordBreak: 'break-word' }}>
             R$ {min.toLocaleString('pt-BR')} – R$ {max.toLocaleString('pt-BR')}
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>/mês</span>
+            <span style={{ fontSize: '16px', fontWeight: 700 }}>/mês</span>
           </p>
           <p style={{ color: 'rgba(255,51,102,0.6)', fontSize: '12px', marginTop: '8px', lineHeight: 1.5 }}>
             Baseado nos problemas técnicos encontrados e no impacto médio em e-commerces com perfil similar.
@@ -199,6 +199,13 @@ const AdFallbackSection = memo(function AdFallbackSection() {
 const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalysis }) {
   const roasConf = ROAS_CONFIG[ad.roasAssessment]
   const hasRoas = ad.roas !== null
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
   return (
     <div style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
       <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #080f1e 100%)', padding: '22px 24px', borderBottom: '1px solid rgba(59,130,246,0.2)' }}>
@@ -213,30 +220,30 @@ const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalys
         </p>
       </div>
 
-      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ padding: isMobile ? '16px' : '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {/* ROAS — só mostra quando há investimento em anúncios */}
         {hasRoas && (
         <div style={{ borderRadius: '12px', border: `1px solid ${roasConf.color}30`, backgroundColor: roasConf.bg, padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: '12px' }}>
             <div>
               <p style={{ fontSize: '10px', fontWeight: 700, color: roasConf.color, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 MER Estimado (Faturamento / Investimento)
               </p>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-                <span style={{ fontSize: '40px', fontWeight: 900, color: roasConf.color, fontFamily: 'var(--font-mono), monospace', lineHeight: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '10px' }}>
+                <span style={{ fontSize: isMobile ? '34px' : '40px', fontWeight: 900, color: roasConf.color, fontFamily: 'var(--font-mono), monospace', lineHeight: 1 }}>
                   {ad.roas}x
                 </span>
                 <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)', paddingBottom: '4px' }}>
-                  vs benchmark {ad.roasBenchmark.min}x–{ad.roasBenchmark.max}x
+                  benchmark: {ad.roasBenchmark.min}x–{ad.roasBenchmark.max}x
                 </span>
               </div>
             </div>
-            <div style={{ padding: '8px 14px', borderRadius: '10px', background: `${roasConf.color}18`, border: `1px solid ${roasConf.color}30`, color: roasConf.color, fontSize: '13px', fontWeight: 700, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ padding: '7px 12px', borderRadius: '10px', background: `${roasConf.color}18`, border: `1px solid ${roasConf.color}30`, color: roasConf.color, fontSize: '13px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px', alignSelf: isMobile ? 'flex-start' : 'auto' }}>
               <span>{roasConf.icon}</span><span>{roasConf.label}</span>
             </div>
           </div>
           {ad.roasComment && (
-            <p style={{ fontSize: '13px', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${roasConf.color}20`, color: `${roasConf.color}cc` }}>
+            <p style={{ fontSize: '13px', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${roasConf.color}20`, color: `${roasConf.color}cc`, lineHeight: 1.55 }}>
               {ad.roasComment}
             </p>
           )}
@@ -288,7 +295,7 @@ const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalys
             <h3 style={{ fontWeight: 700, color: 'rgba(255,255,255,0.8)', marginBottom: '12px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>💡</span> Ideias de Criativo para Anúncios
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
               {ad.creativeIdeas.map((idea, idx) => (
                 <div key={idx} style={{ padding: '14px', borderRadius: '10px', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -455,7 +462,7 @@ export default function ResultPage() {
       <div style={{ maxWidth: '760px', margin: '0 auto', padding: isMobile ? '16px 12px 64px' : '28px 16px 64px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
         {/* Score Hero */}
-        <div style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '28px' }}>
+        <div style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: isMobile ? '20px 16px' : '28px' }}>
           {(storeUrl || storeContext.niche) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', padding: '10px 14px', background: '#162033', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.07)', flexWrap: 'wrap' }}>
               {storeUrl && (
@@ -472,15 +479,15 @@ export default function ResultPage() {
           <ScoreGauge score={result.overallScore} size="lg" />
           <MaturityTrack score={result.overallScore} />
 
-          <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px', textAlign: 'center' }}>
+          <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: isMobile ? '8px' : '10px', textAlign: 'center' }}>
             {[
               { value: totalIssues, label: 'problemas', color: 'rgba(255,255,255,0.75)' },
               { value: criticalTotal, label: 'críticos', color: '#ff3366' },
               { value: `${result.benchmark}%`, label: result.benchmark <= 50 ? 'abaixo do mercado' : 'acima do mercado', color: result.benchmark <= 50 ? '#ff3366' : '#00e676' },
             ].map((item, idx) => (
-              <div key={idx} style={{ background: '#162033', borderRadius: '10px', padding: '14px 8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '26px', fontWeight: 700, color: item.color, lineHeight: 1, marginBottom: '4px' }}>{item.value}</p>
-                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>{item.label}</p>
+              <div key={idx} style={{ background: '#162033', borderRadius: '10px', padding: isMobile ? '12px 6px' : '14px 8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ fontFamily: 'var(--font-mono), monospace', fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: item.color, lineHeight: 1, marginBottom: '4px' }}>{item.value}</p>
+                <p style={{ fontSize: isMobile ? '10px' : '11px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.3 }}>{item.label}</p>
               </div>
             ))}
           </div>
@@ -541,27 +548,27 @@ export default function ResultPage() {
                   return (
                     <div key={cat.category} style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
                       {/* Header */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderLeft: `4px solid ${color}` }}>
-                        <span style={{ fontSize: '18px' }}>{CATEGORY_ICONS[cat.category]}</span>
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, color: '#f1f5f9', fontSize: '14px' }}>{CATEGORY_LABELS[cat.category]}</h3>
-                          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{CATEGORY_DESCRIPTIONS[cat.category]}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: isMobile ? '14px' : '18px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderLeft: `4px solid ${color}` }}>
+                        <span style={{ fontSize: '16px', flexShrink: 0 }}>{CATEGORY_ICONS[cat.category]}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h3 style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, color: '#f1f5f9', fontSize: '13px' }}>{CATEGORY_LABELS[cat.category]}</h3>
+                          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'nowrap' : 'normal' }}>{CATEGORY_DESCRIPTIONS[cat.category]}</p>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '28px', fontWeight: 700, color, lineHeight: 1 }}>{cat.score}</span>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color, lineHeight: 1 }}>{cat.score}</span>
                           <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)' }}>/100</p>
                         </div>
                       </div>
 
                       {/* Score bar */}
-                      <div style={{ padding: '10px 20px', background: '#0a0f1a', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ padding: isMobile ? '8px 14px' : '10px 20px', background: '#0a0f1a', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${cat.score}%`, backgroundColor: color, boxShadow: `0 0 6px ${color}60`, transition: 'width 0.7s ease' }} />
                         </div>
                       </div>
 
                       {/* Issues */}
-                      <div style={{ padding: '18px 20px' }}>
+                      <div style={{ padding: isMobile ? '14px' : '18px 20px' }}>
                         {issueCount === 0 ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: 'rgba(0,230,118,0.05)', border: '1px solid rgba(0,230,118,0.15)', borderRadius: '10px' }}>
                             <span style={{ fontSize: '18px' }}>✅</span>

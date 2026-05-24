@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 type Props = {
   storeUrl: string
   score: number
@@ -8,6 +10,13 @@ type Props = {
 }
 
 export function WhatsAppCTA({ storeUrl, score, totalIssues, revenueImpact }: Props) {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? ''
   const message = encodeURIComponent(
     `Olá! Acabei de analisar minha loja ${storeUrl} e tirei ${score}/100 com ${totalIssues} problemas encontrados. Quero agendar a consultoria gratuita para resolver isso.`
@@ -30,7 +39,7 @@ export function WhatsAppCTA({ storeUrl, score, totalIssues, revenueImpact }: Pro
         background: 'linear-gradient(90deg, transparent, #00e676, transparent)',
       }} />
 
-      <div style={{ padding: '36px 28px', textAlign: 'center' }}>
+      <div style={{ padding: isMobile ? '28px 16px' : '36px 28px', textAlign: 'center' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)',
@@ -67,14 +76,17 @@ export function WhatsAppCTA({ storeUrl, score, totalIssues, revenueImpact }: Pro
         <a
           href={href} target="_blank" rel="noopener noreferrer"
           style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+            display: isMobile ? 'flex' : 'inline-flex',
+            width: isMobile ? '100%' : 'auto',
+            alignItems: 'center', justifyContent: 'center', gap: '10px',
             background: '#00e676', color: '#001a0e',
             fontWeight: 700, fontSize: '15px',
-            padding: '16px 32px', borderRadius: '14px',
+            padding: '16px 24px', borderRadius: '14px',
             textDecoration: 'none',
             boxShadow: '0 0 40px rgba(0,230,118,0.3)',
             fontFamily: 'var(--font-syne), sans-serif',
             transition: 'all 0.15s',
+            boxSizing: 'border-box',
           }}
         >
           <svg viewBox="0 0 24 24" style={{ width: '20px', height: '20px', fill: '#001a0e', flexShrink: 0 }}>
@@ -83,7 +95,7 @@ export function WhatsAppCTA({ storeUrl, score, totalIssues, revenueImpact }: Pro
           Agendar consultoria gratuita
         </a>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '18px', color: 'rgba(0,230,118,0.5)', fontSize: '12px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '10px 16px' : '20px', marginTop: '18px', color: 'rgba(0,230,118,0.5)', fontSize: '12px' }}>
           <span>✓ Sem compromisso</span>
           <span>✓ 100% gratuito</span>
           <span>✓ Resposta em até 2h</span>

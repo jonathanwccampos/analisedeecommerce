@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 type Props = {
   analysisId: string
@@ -14,6 +14,14 @@ export function EmailGate({ analysisId, totalIssues, onUnlock }: Props) {
   const [whatsapp, setWhatsapp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -49,7 +57,7 @@ export function EmailGate({ analysisId, totalIssues, onUnlock }: Props) {
       background: 'linear-gradient(145deg, #0d1a2e 0%, #080f1e 100%)',
       border: '1px solid rgba(255,255,255,0.08)',
       borderRadius: '20px',
-      padding: '40px 32px',
+      padding: isMobile ? '28px 16px' : '40px 32px',
       textAlign: 'center',
       position: 'relative',
       overflow: 'hidden',
@@ -98,22 +106,24 @@ export function EmailGate({ analysisId, totalIssues, onUnlock }: Props) {
         <div style={{ position: 'relative' }}>
           <input
             type="tel"
-            placeholder="WhatsApp — para receber o plano de ação"
+            placeholder={isMobile ? 'WhatsApp (recomendado)' : 'WhatsApp — para receber o plano de ação'}
             value={whatsapp}
             onChange={e => setWhatsapp(e.target.value)}
-            style={{ ...inputStyle, paddingRight: '108px' }}
+            style={{ ...inputStyle, paddingRight: isMobile ? '16px' : '108px' }}
             onFocus={e => { e.target.style.borderColor = 'rgba(0,230,118,0.4)' }}
             onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)' }}
           />
-          <div style={{
-            position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-            fontSize: '10px', fontWeight: 700, color: '#00e676',
-            background: 'rgba(0,230,118,0.12)', border: '1px solid rgba(0,230,118,0.25)',
-            padding: '2px 7px', borderRadius: '5px', whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-          }}>
-            recomendado
-          </div>
+          {!isMobile && (
+            <div style={{
+              position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+              fontSize: '10px', fontWeight: 700, color: '#00e676',
+              background: 'rgba(0,230,118,0.12)', border: '1px solid rgba(0,230,118,0.25)',
+              padding: '2px 7px', borderRadius: '5px', whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+            }}>
+              recomendado
+            </div>
+          )}
         </div>
 
         {error && <p style={{ color: '#ff3366', fontSize: '13px', textAlign: 'left' }}>{error}</p>}

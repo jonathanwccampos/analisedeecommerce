@@ -1,21 +1,30 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useAnalysis } from '@/lib/hooks/useAnalysis'
 
 const CHECKS = [
-  { key: 'performance', label: 'Medindo velocidade — 1s de atraso = 7% menos em conversão' },
-  { key: 'seo', label: 'Verificando visibilidade no Google' },
-  { key: 'mobile', label: 'Testando no celular — 73% do tráfego BR é mobile' },
-  { key: 'conversion', label: 'Mapeando barreiras de compra' },
-  { key: 'trust', label: 'Checando sinais de confiança e segurança' },
-  { key: 'ux', label: 'Identificando pontos de abandono' },
-  { key: 'gemini', label: 'IA inspecionando o design e CRO visual' },
+  { key: 'performance', label: 'Medindo velocidade — 1s de atraso = 7% menos em conversão', short: 'Medindo velocidade de carga' },
+  { key: 'seo', label: 'Verificando visibilidade no Google', short: 'Verificando SEO' },
+  { key: 'mobile', label: 'Testando no celular — 73% do tráfego BR é mobile', short: 'Testando experiência mobile' },
+  { key: 'conversion', label: 'Mapeando barreiras de compra', short: 'Mapeando barreiras de compra' },
+  { key: 'trust', label: 'Checando sinais de confiança e segurança', short: 'Checando confiança e segurança' },
+  { key: 'ux', label: 'Identificando pontos de abandono', short: 'Identificando pontos de abandono' },
+  { key: 'gemini', label: 'IA inspecionando o design e CRO visual', short: 'IA inspecionando o design' },
 ]
 
 export default function LoadingPage() {
   const params = useParams()
   const id = params.id as string
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const { checkedCount, elapsed, error } = useAnalysis(id, { totalSteps: CHECKS.length })
   const progress = Math.round((checkedCount / CHECKS.length) * 100)
@@ -23,7 +32,7 @@ export default function LoadingPage() {
   return (
     <main style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '48px 16px',
+      padding: isMobile ? '24px 14px' : '48px 16px',
       background: 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(0,230,118,0.07) 0%, transparent 60%), #080c14',
     }}>
       {/* Dot grid */}
@@ -97,8 +106,9 @@ export default function LoadingPage() {
                   fontWeight: active ? 600 : 400,
                   fontFamily: active ? 'var(--font-mono), monospace' : 'var(--font-sans), sans-serif',
                   transition: 'color 0.3s',
+                  lineHeight: 1.4,
                 }}>
-                  {check.label}
+                  {isMobile ? check.short : check.label}
                 </span>
                 {active && (
                   <div style={{
