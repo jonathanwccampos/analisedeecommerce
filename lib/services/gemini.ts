@@ -553,15 +553,13 @@ async function generateAdAnalysis(
   context: Partial<StoreContext>,
   overallScore: number,
 ): Promise<AdAnalysis | undefined> {
-  if (!context.adSpend || context.adSpend === 'nenhum') return undefined
-  if (!context.monthlyRevenue) return undefined
-
   const niche = context.niche ?? 'outro'
   const benchmarks = NICHE_BENCHMARKS[niche] ?? NICHE_BENCHMARKS.outro
+  const noAdSpend = !context.adSpend || context.adSpend === 'nenhum'
 
-  const adSpendMid = AD_SPEND_MIDPOINTS[context.adSpend] ?? 0
-  const revenueMid = REVENUE_MIDPOINTS[context.monthlyRevenue] ?? 0
-  const roas = adSpendMid > 0 ? parseFloat((revenueMid / adSpendMid).toFixed(1)) : null
+  const adSpendMid = context.adSpend ? (AD_SPEND_MIDPOINTS[context.adSpend] ?? 0) : 0
+  const revenueMid = context.monthlyRevenue ? (REVENUE_MIDPOINTS[context.monthlyRevenue] ?? 0) : 0
+  const roas = adSpendMid > 0 && revenueMid > 0 ? parseFloat((revenueMid / adSpendMid).toFixed(1)) : null
 
   const roasBenchmark = benchmarks.roasBenchmark
 
@@ -581,7 +579,42 @@ async function generateAdAnalysis(
 
   const contextText = buildContextText(context)
 
-  const prompt = `Você é um Gestor de Tráfego e Especialista em Growth de alta performance, especializado no ecossistema de e-commerce brasileiro (Meta Ads, Google Shopping, CBO, Advantage+, campanhas de catálogo dinâmico).
+  const prompt = noAdSpend
+    ? `Você é um Especialista em Tráfego Pago e Growth de e-commerce brasileiro, especializado em Meta Ads e Google Shopping.
+
+Esta loja ainda não investe em anúncios pagos. Crie um guia de entrada em tráfego pago personalizado para o nicho de ${NICHE_LABELS[niche]}.
+
+Contexto da loja: ${contextText || 'não informado'}
+Score do site: ${overallScore}/100
+Problemas identificados no site que devem ser corrigidos ANTES de iniciar anúncios:
+${topIssues || 'Nenhum problema crítico identificado.'}
+
+${BR_MARKET_CONTEXT}
+
+REGRAS ABSOLUTAS:
+- ZERO termos técnicos sem explicação. Explique "CBO" como "orçamento centralizado no nível da campanha", "remarketing" como "anúncios para quem já visitou a loja", etc.
+- Seja específico para o nicho de ${NICHE_LABELS[niche]} — nomes de produtos, situações reais de compra, linguagem do consumidor deste segmento
+- Use números reais: ROAS médio do setor, custo por clique estimado, orçamento de teste
+
+Responda EXATAMENTE em formato JSON (objeto), sem texto introdutório ou explicativo:
+{
+  "roasComment": "Por que vale a pena anunciar neste nicho: cite o ROAS médio de ${roasBenchmark.min}x–${roasBenchmark.max}x do setor de ${NICHE_LABELS[niche]}, o que significa em reais (ex: para cada R$1.000 investido, a loja pode faturar R$X.000), e quais problemas do site precisam ser corrigidos antes de ligar os anúncios para não perder dinheiro. 2–3 frases com números concretos.",
+  "adLandingFixes": [
+    { "title": "Primeiro ponto a corrigir antes de anunciar (máximo 5 palavras)", "description": "Problema específico identificado no site que vai desperdiçar verba publicitária se não for corrigido primeiro — explique o impacto em conversão.", "priority": "alta" },
+    { "title": "Segundo ponto crítico pré-anúncio", "description": "Segundo ajuste necessário para não queimar orçamento de teste.", "priority": "alta" },
+    { "title": "Canal inicial recomendado para ${NICHE_LABELS[niche]}", "description": "Qual plataforma de anúncios começar (Meta Ads, Google Shopping, TikTok Ads) e por que faz sentido para este nicho — com orçamento mínimo recomendado para teste.", "priority": "média" }
+  ],
+  "creativeIdeas": [
+    { "concept": "Ideia de vídeo para o primeiro anúncio em ${NICHE_LABELS[niche]}", "description": "Roteiro específico: o que mostrar nos primeiros 3 segundos, o gancho principal e a frase de encerramento com chamada para ação — adaptado para o consumidor deste nicho.", "format": "video" },
+    { "concept": "Carrossel de produtos em destaque para ${NICHE_LABELS[niche]}", "description": "Como estruturar o carrossel: qual produto colocar primeiro, o que mostrar em cada card (foto + preço + parcelas) para gerar cliques qualificados neste segmento.", "format": "carrossel" },
+    { "concept": "Anúncio de oferta de entrada para atrair o primeiro cliente", "description": "Imagem simples com oferta irresistível (frete grátis na primeira compra, desconto especial ou brinde) — linguagem e visual específicos para ${NICHE_LABELS[niche]}.", "format": "imagem" }
+  ],
+  "audienceStrategy": [
+    "Público inicial para Meta Ads em ${NICHE_LABELS[niche]}: tamanho recomendado de público, interesses principais, faixa etária e localização para o primeiro teste.",
+    "Orçamento e duração do teste: quanto investir por dia no início, quanto tempo rodar antes de avaliar os resultados, e como saber se o anúncio está funcionando."
+  ]
+}`
+    : `Você é um Gestor de Tráfego e Especialista em Growth de alta performance, especializado no ecossistema de e-commerce brasileiro (Meta Ads, Google Shopping, CBO, Advantage+, campanhas de catálogo dinâmico).
 
 Faça uma análise estratégica de anúncios reais baseada nos dados comerciais fornecidos.
 
@@ -599,48 +632,27 @@ ${BR_MARKET_CONTEXT}
 Problemas Técnicos e de Conversão no site que estão prejudicando a performance dos anúncios:
 ${topIssues || 'Nenhum problema crítico apontado.'}
 
-Crie um plano estratégico de anúncios de alto nível, sob medida para esta loja.
+REGRAS ABSOLUTAS:
+- ZERO termos técnicos sem explicação (explique "CBO" como "orçamento centralizado", "DPA" como "anúncio dinâmico de catálogo", etc.)
+- Seja específico para o nicho de ${NICHE_LABELS[niche]} — cite produtos reais, situações de compra, linguagem do consumidor
+- Use números reais em R$: calcule o desperdício de verba baseado no gasto declarado
 
-Responda EXATAMENTE em formato JSON (objeto), sem texto introdutório ou explicativo. Respeite estritamente este formato:
+Responda EXATAMENTE em formato JSON (objeto), sem texto introdutório ou explicativo:
 {
-  "roasComment": "Diagnóstico financeiro direto sobre o ROAS atual: compare com o benchmark do setor, calcule o desperdício estimado em reais por mês com base no gasto declarado, e explique mecanicamente por que os problemas do site (velocidade, mobile, ausência de CTAs) estão inflando o CAC e destruindo o ROAS. 2–3 frases densas, com números concretos.",
+  "roasComment": "Diagnóstico financeiro direto sobre o ROAS atual: compare com o benchmark do setor de ${NICHE_LABELS[niche]} (${roasBenchmark.min}x–${roasBenchmark.max}x), calcule o desperdício estimado em reais por mês com base no gasto declarado, e explique por que os problemas do site estão inflando o custo por venda. 2–3 frases com números concretos.",
   "adLandingFixes": [
-    {
-      "title": "Mudança prioritária no site para anúncios (máximo 5 palavras)",
-      "description": "Detalhamento de como essa melhoria específica na página inicial vai estancar o desperdício de verba de tráfego e elevar o ROI.",
-      "priority": "alta"
-    },
-    {
-      "title": "Ajuste na página para mobile ou checkout",
-      "description": "Correção para capturar o tráfego mobile que hoje abandona a loja por fricção.",
-      "priority": "alta"
-    },
-    {
-      "title": "Gatilho ou oferta para remarketing",
-      "description": "Oferta ou ajuste de visualização de preço na homepage para atrair quem clicou no anúncio e não comprou.",
-      "priority": "média"
-    }
+    { "title": "Mudança prioritária no site para anúncios (máximo 5 palavras)", "description": "Como essa correção específica vai reduzir o custo por clique não convertido e aumentar o retorno sobre o investimento em anúncios.", "priority": "alta" },
+    { "title": "Ajuste para mobile ou checkout", "description": "Correção para capturar o tráfego mobile que hoje clica no anúncio e abandona a loja por fricção — com estimativa de recuperação.", "priority": "alta" },
+    { "title": "Gatilho ou oferta para remarketing", "description": "Ajuste na homepage para reativar quem clicou no anúncio e não comprou — retargeting é 3x mais barato que tráfego frio neste nicho.", "priority": "média" }
   ],
   "creativeIdeas": [
-    {
-      "concept": "Conceito criativo específico (ex: Anúncio de Prova Social, Unboxing ou Comparativo)",
-      "description": "Ideia concreta de roteiro/imagem de anúncio focado no nicho de ${NICHE_LABELS[niche]} para usar no Meta/Google Ads que contorne os problemas de confiança do site.",
-      "format": "video"
-    },
-    {
-      "concept": "Conceito focado em oferta / parcelamento",
-      "description": "Anúncio destacando facilidade de pagamento ou PIX com frete expresso para capturar o consumidor brasileiro.",
-      "format": "carrossel"
-    },
-    {
-      "concept": "Conceito de gancho/dor do cliente",
-      "description": "Anúncio focado na dor que o produto resolve, gerando desejo rápido antes da entrada no site.",
-      "format": "imagem"
-    }
+    { "concept": "Ideia de vídeo específica para ${NICHE_LABELS[niche]}", "description": "Roteiro concreto: gancho nos primeiros 3 segundos, o que mostrar no meio (prova social, produto em uso, resultado) e chamada para ação final — adaptado para o consumidor deste nicho.", "format": "video" },
+    { "concept": "Carrossel de oferta ou comparativo para ${NICHE_LABELS[niche]}", "description": "Estrutura do carrossel: qual produto destacar primeiro, o que mostrar em cada card (benefício + preço + prova) para gerar cliques qualificados neste segmento.", "format": "carrossel" },
+    { "concept": "Anúncio de gancho/dor do cliente", "description": "Imagem impactante focada na dor que o produto resolve para o consumidor de ${NICHE_LABELS[niche]} — linguagem e visual que geram desejo antes mesmo de entrar no site.", "format": "imagem" }
   ],
   "audienceStrategy": [
-    "Estratégia de público 1 (ex: Estrutura CBO/Advantage+ simplificada com segmentação ampla de interesses focada no nicho brasileiro).",
-    "Estratégia de público 2 (ex: Campanha de Remarketing dinâmico de catálogo DPA com oferta de 10% de desconto ou frete grátis para reengajar abandonos)."
+    "Estrutura de campanha recomendada para ${NICHE_LABELS[niche]}: como organizar públicos frios (interesses amplos) e quentes (visitantes e compradores anteriores) para maximizar o ROAS com o orçamento atual.",
+    "Campanha de reengajamento para quem clicou no anúncio mas não comprou: qual oferta usar (desconto, frete grátis, bônus), duração da janela de remarketing e orçamento recomendado."
   ]
 }`
 

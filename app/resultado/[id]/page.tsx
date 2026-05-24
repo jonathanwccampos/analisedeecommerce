@@ -192,74 +192,30 @@ const TicketMedioSection = memo(function TicketMedioSection({ strategy }: { stra
   )
 })
 
-const AdFallbackSection = memo(function AdFallbackSection({ adSpend }: { adSpend?: string }) {
-  if (!adSpend || adSpend === 'nenhum') return null
-  const spendLabels: Record<string, string> = {
-    'menos-1k': 'menos de R$ 1.000/mês', '1k-5k': 'R$ 1.000 – R$ 5.000/mês',
-    '5k-20k': 'R$ 5.000 – R$ 20.000/mês', 'mais-20k': 'acima de R$ 20.000/mês',
-  }
-  const tips = [
-    { tip: 'Velocidade da landing page', desc: 'Uma página que demora mais de 3s para abrir no mobile pode destruir até 50% do seu ROAS. Prioridade máxima.' },
-    { tip: 'Coerência entre o anúncio e a página', desc: 'Se o anúncio promete "vestido azul floral", a landing deve mostrar exatamente isso above the fold.' },
-    { tip: 'CTA e preço visíveis sem scroll', desc: 'O comprador que chegou pelo anúncio precisa ver o produto, o preço e o botão de compra sem precisar descer a página.' },
-    { tip: 'Prova social acima do fold', desc: 'Avaliações de clientes, número de pedidos ou depoimentos visíveis na landing aumentam ROAS em até 25%.' },
-    { tip: 'PIX e parcelamento em destaque', desc: '43% dos brasileiros preferem PIX. Se não estiver visível antes do checkout, você está perdendo conversões.' },
-  ]
-
-  return (
-    <div style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
-      <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #080f1e 100%)', padding: '22px 24px', borderBottom: '1px solid rgba(59,130,246,0.2)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-          <span style={{ fontSize: '18px' }}>📊</span>
-          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '17px', fontWeight: 700, color: '#f1f5f9' }}>
-            Diagnóstico de Tráfego Pago
-          </h2>
-        </div>
-        <p style={{ color: 'rgba(96,165,250,0.7)', fontSize: '13px' }}>
-          Investimento declarado: {spendLabels[adSpend] ?? adSpend}
-        </p>
-      </div>
-      <div style={{ padding: '24px' }}>
-        <div style={{ background: 'rgba(255,176,32,0.06)', border: '1px solid rgba(255,176,32,0.2)', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
-          <p style={{ color: 'rgba(255,176,32,0.9)', fontSize: '13px', fontWeight: 500 }}>
-            ⚡ Configure <code style={{ background: 'rgba(255,176,32,0.15)', padding: '1px 6px', borderRadius: '4px', fontFamily: 'var(--font-mono), monospace', fontSize: '12px' }}>GEMINI_API_KEY</code> para ativar análise detalhada de ROAS, criativos e audiência.
-          </p>
-        </div>
-        <p style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: '12px' }}>
-          Enquanto isso, verifique estes pontos críticos para o retorno dos seus anúncios:
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {tips.map((item, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: '12px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.12)' }}>
-              <span style={{ color: 'rgba(96,165,250,0.7)', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>{idx + 1}.</span>
-              <div>
-                <p style={{ fontWeight: 600, color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>{item.tip}</p>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', marginTop: '3px', lineHeight: 1.5 }}>{item.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+const AdFallbackSection = memo(function AdFallbackSection() {
+  return null
 })
 
 const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalysis }) {
   const roasConf = ROAS_CONFIG[ad.roasAssessment]
+  const hasRoas = ad.roas !== null
   return (
     <div style={{ background: '#0f1624', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
       <div style={{ background: 'linear-gradient(135deg, #0a1628 0%, #080f1e 100%)', padding: '22px 24px', borderBottom: '1px solid rgba(59,130,246,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
           <span style={{ fontSize: '18px' }}>📊</span>
           <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '17px', fontWeight: 700, color: '#f1f5f9' }}>
-            Diagnóstico de Tráfego Pago
+            {hasRoas ? 'Diagnóstico de Tráfego Pago' : 'Estratégia de Anúncios para sua Loja'}
           </h2>
         </div>
-        <p style={{ color: 'rgba(96,165,250,0.6)', fontSize: '13px' }}>Análise de ROAS, criativos e estratégia de anúncios</p>
+        <p style={{ color: 'rgba(96,165,250,0.6)', fontSize: '13px' }}>
+          {hasRoas ? 'Análise de ROAS, criativos e estratégia de anúncios' : 'Criativos, canais e estratégia de audiência personalizada por IA'}
+        </p>
       </div>
 
       <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {/* ROAS */}
+        {/* ROAS — só mostra quando há investimento em anúncios */}
+        {hasRoas && (
         <div style={{ borderRadius: '12px', border: `1px solid ${roasConf.color}30`, backgroundColor: roasConf.bg, padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
             <div>
@@ -268,7 +224,7 @@ const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalys
               </p>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
                 <span style={{ fontSize: '40px', fontWeight: 900, color: roasConf.color, fontFamily: 'var(--font-mono), monospace', lineHeight: 1 }}>
-                  {ad.roas !== null ? `${ad.roas}x` : '—'}
+                  {ad.roas}x
                 </span>
                 <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)', paddingBottom: '4px' }}>
                   vs benchmark {ad.roasBenchmark.min}x–{ad.roasBenchmark.max}x
@@ -285,12 +241,20 @@ const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalys
             </p>
           )}
         </div>
+        )}
+
+        {/* roasComment para quem não tem investimento em anúncios */}
+        {!hasRoas && ad.roasComment && (
+          <div style={{ borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)', backgroundColor: 'rgba(59,130,246,0.05)', padding: '20px' }}>
+            <p style={{ fontSize: '13px', color: 'rgba(96,165,250,0.85)', lineHeight: 1.6 }}>{ad.roasComment}</p>
+          </div>
+        )}
 
         {/* Landing fixes */}
         {ad.adLandingFixes.length > 0 && (
           <div>
             <h3 style={{ fontWeight: 700, color: 'rgba(255,255,255,0.8)', marginBottom: '12px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🎯</span> Melhorias na Landing Page para Aumentar ROAS
+              <span>🎯</span> {hasRoas ? 'Melhorias na Landing Page para Aumentar ROAS' : 'O que Preparar Antes de Começar a Anunciar'}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {ad.adLandingFixes.map((fix, idx) => (
@@ -343,7 +307,7 @@ const AdAnalysisSection = memo(function AdAnalysisSection({ ad }: { ad: AdAnalys
         {ad.audienceStrategy.length > 0 && (
           <div>
             <h3 style={{ fontWeight: 700, color: 'rgba(255,255,255,0.8)', marginBottom: '12px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>👥</span> Estratégia de Audiência
+              <span>👥</span> {hasRoas ? 'Estratégia de Audiência' : 'Primeiros Passos com Anúncios'}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {ad.audienceStrategy.map((strategy, idx) => (
@@ -628,11 +592,7 @@ export default function ResultPage() {
             <TicketMedioSection strategy={result.ticketStrategy} />
 
             {/* Ad Analysis */}
-            {result.adAnalysis ? (
-              <AdAnalysisSection ad={result.adAnalysis} />
-            ) : (
-              <AdFallbackSection adSpend={storeContext.adSpend} />
-            )}
+            {result.adAnalysis && <AdAnalysisSection ad={result.adAnalysis} />}
 
             {/* Action Plan */}
             {result.topPriorities.length > 0 && (
