@@ -6,9 +6,39 @@ import { runAnalysis } from '@/lib/services/analyzer'
 function isValidUrl(str: string): boolean {
   try {
     const url = new URL(str)
-    return url.protocol === 'http:' || url.protocol === 'https:'
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    return url.hostname.includes('.')
   } catch {
     return false
+  }
+}
+
+async function isReachable(url: string): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
+    const res = await fetch(url, {
+      method: 'HEAD',
+      signal: controller.signal,
+      redirect: 'follow',
+    })
+    clearTimeout(timer)
+    return res.status < 500
+  } catch {
+    // tenta GET como fallback (alguns servidores bloqueiam HEAD)
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 5000)
+      const res = await fetch(url, {
+        method: 'GET',
+        signal: controller.signal,
+        redirect: 'follow',
+      })
+      clearTimeout(timer)
+      return res.status < 500
+    } catch {
+      return false
+    }
   }
 }
 
@@ -49,7 +79,15 @@ export async function POST(req: NextRequest) {
 
     if (!url || !isValidUrl(url)) {
       return NextResponse.json(
-        { error: 'URL inválida. Informe uma URL com http:// ou https://' },
+        { error: 'URL inválida. Informe uma URL válida, ex: https://sujaloja.com.br' },
+        { status: 400 }
+      )
+    }
+
+    const reachable = await isReachable(url)
+    if (!reachable) {
+      return NextResponse.json(
+        { error: 'Não foi possível acessar essa URL. Verifique se o endereço está correto e o site está no ar.' },
         { status: 400 }
       )
     }

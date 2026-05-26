@@ -51,7 +51,9 @@ const TICKETS: { value: AverageTicket; label: string; hint: string }[] = [
 function isValidUrl(str: string): boolean {
   try {
     const url = new URL(str)
-    return url.protocol === 'http:' || url.protocol === 'https:'
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    // rejeita hostnames sem ponto, ex: "teste", "localhost"
+    return url.hostname.includes('.')
   } catch { return false }
 }
 

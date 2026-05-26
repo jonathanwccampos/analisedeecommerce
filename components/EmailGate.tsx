@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from 'react'
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+  }
+}
+
 type Props = {
   analysisId: string
   totalIssues: number
@@ -35,6 +41,8 @@ export function EmailGate({ analysisId, totalIssues, onUnlock }: Props) {
       })
       const data = await res.json() as { ok?: boolean; error?: string }
       if (!res.ok || !data.ok) { setError(data.error ?? 'Erro ao salvar. Tente novamente.'); return }
+      window.fbq?.('track', 'Lead', { content_name: 'Desbloqueio Relatorio' })
+      window.fbq?.('trackCustom', 'DesbloqueioRelatorio')
       onUnlock()
     } catch {
       setError('Erro de conexão. Tente novamente.')
