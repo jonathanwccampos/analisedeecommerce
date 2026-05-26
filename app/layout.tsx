@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
           (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
           fbq('init','1482073919238379');
-          fbq('track','PageView');
+          if(!window._fbPVFired){window._fbPVFired=true;fbq('track','PageView');}
         `}</Script>
         <noscript>
           {/* eslint-disable-next-line @next/next/no-img-element */}
